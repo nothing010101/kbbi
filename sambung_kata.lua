@@ -1,5 +1,6 @@
 -- ================================================
--- AUTO SAMBUNG KATA - Roblox KBBI Game v3
+-- AUTO SAMBUNG KATA - Roblox KBBI Game v4
+-- Delta Executor - pakai firetouchinterest
 -- ================================================
 
 local Players = game:GetService("Players")
@@ -26,19 +27,14 @@ local GUI_PATH = {
 }
 
 -- ================================================
--- KLIK TOMBOL - pakai Activated event (paling reliable)
+-- KLIK TOMBOL - pakai firetouchinterest (Delta)
 -- ================================================
 local function clickButton(btn)
-    -- Cara paling reliable: langsung fire Activated
-    local ok = pcall(function()
-        btn.Activated:Fire()
-    end)
-    if not ok then
-        -- Fallback: MouseButton1Down + Up
-        pcall(function() btn.MouseButton1Down:Fire() end)
+    pcall(function()
+        firetouchinterest(btn, localPlayer.Character, 0) -- touch
         task.wait(0.05)
-        pcall(function() btn.MouseButton1Up:Fire() end)
-    end
+        firetouchinterest(btn, localPlayer.Character, 1) -- release
+    end)
 end
 
 -- ================================================
@@ -64,21 +60,17 @@ local function loadWordList()
     else
         warn("[AutoKata] Gagal load dari GitHub, pakai cadangan...")
     end
-    
-    -- Tambah kata-kata yang sering muncul sebagai fallback/tambahan
+
+    -- Kata tambahan
     local extraWords = {
-        -- NG
         "nganga","ngeri","ngilu","ngobrol","ngomong","ngomel","ngantuk","ngarai","ngawur",
-        "ngayuh","ngembat","ngemplang","ngendon","ngetik","ngerti","ngeluh","ngeles",
-        -- LA
-        "lapang","lama","langkah","lanjut","lapis","lapar","lari","larut","laut","layak",
-        "layang","lazim","labuh","lacak","ladang","laga","lagak","lahan","lahir","laju",
-        -- Umum lainnya
+        "ngayuh","ngerti","ngeluh","ngeles","ngegas","ngejek","ngemil","ngendon",
         "abad","abadi","air","ajar","alam","aman","anak","api","arah","asal",
         "baca","badan","baik","baru","batu","bawa","besar","bisa","buku","bumi",
         "cara","cerita","cinta","cukup","daftar","dalam","dasar","desa","diri","dunia",
         "edar","emosi","energi","era","esok","etika","ekspor","ekstra","eksis",
         "fakta","fisik","fokus","fungsi","gagal","gairah","gaya","gerak","giat","gigih",
+        "gunting","gundah","gunung","guna","guru","gabung","galeri","gambaran","garang",
         "habis","hak","halus","harap","harga","hasil","hidup","hormat","hukum","huruf",
         "ideal","ilmu","iman","impian","indah","ingin","inovasi","inti","izin","iffah",
         "jabat","jaga","jalan","janji","jelas","jiwa","jujur",
@@ -91,13 +83,8 @@ local function loadWordList()
         "sabar","sadar","sahabat","semangat","setia","sikap","solusi","sopan","syukur",
         "tabah","tahu","tangguh","tegas","tepat","tulus","tumbuh",
         "ubah","ulet","umum","usaha","utama","valid","visi","wajar","waktu","yakin","zakat",
-        -- Kata 2-3 huruf awal
-        "nganga","ngeri","ngilu","ngobrol","ngomong",
-        "ahok","ahwal","ekspor","ekspres","ekskul",
-        "iffah","iftar","mimisan","mitos","migrasi",
     }
-    
-    -- Merge extra words
+
     local existing = {}
     for _, w in ipairs(wordList) do existing[string.lower(w)] = true end
     for _, w in ipairs(extraWords) do
@@ -106,7 +93,6 @@ local function loadWordList()
             existing[string.lower(w)] = true
         end
     end
-    
     print("[AutoKata] Total kata: " .. #wordList)
 end
 
@@ -178,6 +164,7 @@ end
 local function clickLetter(letter)
     local keyboard = getKeyboard()
     if not keyboard then return false end
+    -- Cari di Row1, Row2, Row3
     for _, rowName in ipairs(GUI_PATH.rows) do
         local row = keyboard:FindFirstChild(rowName)
         if row then
@@ -188,7 +175,7 @@ local function clickLetter(letter)
             end
         end
     end
-    -- Coba row4 juga (ada tombol A cadangan)
+    -- Cari di Row4 juga (tombol A cadangan)
     local row4 = keyboard:FindFirstChild(GUI_PATH.enterBtn)
     if row4 then
         local btn = row4:FindFirstChild(letter)
