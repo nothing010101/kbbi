@@ -8,8 +8,8 @@ local localPlayer = Players.LocalPlayer
 
 local CONFIG = {
     autoMode = true,
-    delay = 0.2,
-    submitDelay = 0.3,
+    delay = 0.4,
+    submitDelay = 0.6,
     loopMode = true,
     wordListURL = "https://raw.githubusercontent.com/nothing010101/kbbi/main/kbbi_words.json"
 }
@@ -31,7 +31,8 @@ local GUI_PATH = {
 -- ================================================
 local function clickButton(btn)
     pcall(function()
-        firetouchinterest(btn, localPlayer.Character, 0) -- touch
+        firetouchinterest(btn, localPlayer.Character, 0)
+    task.wait(0.15) -- touch
         task.wait(0.05)
         firetouchinterest(btn, localPlayer.Character, 1) -- release
     end)
