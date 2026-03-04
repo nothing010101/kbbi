@@ -1,4 +1,4 @@
--- SAMBUNG KATA UI v7
+-- SAMBUNG KATA UI v6 (rollback)
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
@@ -18,24 +18,23 @@ local function createUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AutoKataUI"
     screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = localPlayer.PlayerGui
 
     local frame = Instance.new("Frame")
     frame.Name = "MainFrame"
     frame.Size = UDim2.new(0, 300, 0, 370)
     frame.Position = UDim2.new(0, 10, 0, 10)
-    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    frame.BackgroundTransparency = 0.1
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BackgroundTransparency = 0.2
     frame.BorderSizePixel = 0
     frame.Parent = screenGui
-
     Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
-    -- Header
     local header = Instance.new("Frame")
     header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, 38)
-    header.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    header.Size = UDim2.new(1, 0, 0, 36)
+    header.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
     header.BorderSizePixel = 0
     header.Parent = frame
     Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
@@ -43,12 +42,12 @@ local function createUI()
     local headerFix = Instance.new("Frame")
     headerFix.Size = UDim2.new(1, 0, 0.5, 0)
     headerFix.Position = UDim2.new(0, 0, 0.5, 0)
-    headerFix.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    headerFix.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
     headerFix.BorderSizePixel = 0
     headerFix.Parent = header
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(0.65, 0, 1, 0)
+    title.Size = UDim2.new(0.6, 0, 1, 0)
     title.Position = UDim2.new(0, 8, 0, 0)
     title.BackgroundTransparency = 1
     title.Text = "AUTO KATA"
@@ -60,9 +59,9 @@ local function createUI()
 
     local useBtn = Instance.new("TextButton")
     useBtn.Name = "UseBtn"
-    useBtn.Size = UDim2.new(0, 90, 0, 26)
-    useBtn.Position = UDim2.new(1, -96, 0.5, -13)
-    useBtn.BackgroundColor3 = Color3.fromRGB(40, 190, 40)
+    useBtn.Size = UDim2.new(0, 88, 0, 24)
+    useBtn.Position = UDim2.new(1, -93, 0.5, -12)
+    useBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     useBtn.BorderSizePixel = 0
     useBtn.Text = "Pakai #1"
     useBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -71,11 +70,10 @@ local function createUI()
     useBtn.Parent = header
     Instance.new("UICorner", useBtn).CornerRadius = UDim.new(0, 6)
 
-    -- Prompt
     local promptLabel = Instance.new("TextLabel")
     promptLabel.Name = "PromptLabel"
     promptLabel.Size = UDim2.new(1, -16, 0, 28)
-    promptLabel.Position = UDim2.new(0, 8, 0, 44)
+    promptLabel.Position = UDim2.new(0, 8, 0, 42)
     promptLabel.BackgroundTransparency = 1
     promptLabel.Text = "Prompt: -"
     promptLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -84,24 +82,20 @@ local function createUI()
     promptLabel.TextXAlignment = Enum.TextXAlignment.Left
     promptLabel.Parent = frame
 
-    -- Jawaban 1-10
     for i = 1, CONFIG.maxSuggestions do
         local lbl = Instance.new("TextLabel")
         lbl.Name = "Jawaban" .. i
         lbl.Size = UDim2.new(1, -16, 0, 26)
-        lbl.Position = UDim2.new(0, 8, 0, 76 + (i-1) * 27)
+        lbl.Position = UDim2.new(0, 8, 0, 74 + (i-1) * 27)
         lbl.BackgroundTransparency = 1
         lbl.Text = ""
-        lbl.TextColor3 = i == 1
-            and Color3.fromRGB(80, 255, 80)
-            or Color3.fromRGB(180, 180, 180)
+        lbl.TextColor3 = i == 1 and Color3.fromRGB(80, 255, 80) or Color3.fromRGB(180, 180, 180)
         lbl.TextScaled = true
         lbl.Font = i == 1 and Enum.Font.GothamBold or Enum.Font.Gotham
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = frame
     end
 
-    -- Status
     local status = Instance.new("TextLabel")
     status.Name = "Status"
     status.Size = UDim2.new(1, -16, 0, 20)
@@ -170,36 +164,45 @@ local function updateUI(ui, prompt, words)
     end
 end
 
+-- Pakai path yang work dari versi lama
+local function getMatchUI()
+    local pg = localPlayer:FindFirstChild("PlayerGui")
+    if not pg then return nil end
+    return pg:FindFirstChild("MatchUI")
+end
+
 local function getPrompt()
-    local ok, result = pcall(function()
-        return localPlayer.PlayerGui
-            :FindFirstChild("MatchUI")
-            :FindFirstChild("BottomUI")
-            :FindFirstChild("TopUI")
-            :FindFirstChild("WordServerFrame")
-            :FindFirstChild("WordServer").Text
-    end)
-    if ok and result and result ~= "" then
-        return string.upper(string.gsub(result, "%s+", ""))
+    local matchUI = getMatchUI()
+    if not matchUI then return nil end
+    local bottomUI = matchUI:FindFirstChild("BottomUI")
+    if not bottomUI then return nil end
+    local topUI = bottomUI:FindFirstChild("TopUI")
+    if not topUI then return nil end
+    local wsFrame = topUI:FindFirstChild("WordServerFrame")
+    if not wsFrame then return nil end
+    local label = wsFrame:FindFirstChild("WordServer")
+    if not label then return nil end
+    local text = label.Text
+    if text and text ~= "" then
+        return string.upper(string.gsub(text, "%s+", ""))
     end
     return nil
 end
 
 local function isMyTurn()
-    local ok, result = pcall(function()
-        return localPlayer.PlayerGui
-            :FindFirstChild("MatchUI")
-            :FindFirstChild("BottomUI")
-            :FindFirstChild("Keyboard").Visible
-    end)
-    return ok and result == true
+    local matchUI = getMatchUI()
+    if not matchUI then return false end
+    local bottomUI = matchUI:FindFirstChild("BottomUI")
+    if not bottomUI then return false end
+    local keyboard = bottomUI:FindFirstChild("Keyboard")
+    if not keyboard then return false end
+    return keyboard.Visible
 end
 
 -- MAIN
 local ui = createUI()
 loadWordList(ui)
 
--- Tombol Pakai
 ui.MainFrame.Header.UseBtn.MouseButton1Click:Connect(function()
     if currentSuggestions[1] then
         local word = currentSuggestions[1]
@@ -213,6 +216,8 @@ ui.MainFrame.Header.UseBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+print("[AutoKata] Siap! Menunggu giliran...")
+
 local lastPrompt = ""
 while true do
     task.wait(0.3)
@@ -223,6 +228,7 @@ while true do
             local words = findWords(prompt, CONFIG.maxSuggestions)
             updateUI(ui, prompt, words)
             ui.MainFrame.Status.Text = #words .. " kata ditemukan"
+            print("[AutoKata] Prompt: " .. prompt)
         end
     else
         if lastPrompt ~= "" then
