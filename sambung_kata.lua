@@ -1,8 +1,4 @@
--- ================================================
--- SAMBUNG KATA - UI Helper v6
--- Dengan history kata terpakai
--- ================================================
-
+-- SAMBUNG KATA UI v7
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
@@ -11,12 +7,10 @@ local CONFIG = {
     maxSuggestions = 10,
 }
 
--- History kata yang udah dipakai (reset tiap execute)
 local usedWords = {}
+local currentSuggestions = {}
+local wordList = {}
 
--- ================================================
--- BUAT UI
--- ================================================
 local function createUI()
     local oldUI = localPlayer.PlayerGui:FindFirstChild("AutoKataUI")
     if oldUI then oldUI:Destroy() end
@@ -24,105 +18,97 @@ local function createUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AutoKataUI"
     screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = localPlayer.PlayerGui
 
-    -- Frame utama
     local frame = Instance.new("Frame")
     frame.Name = "MainFrame"
-    frame.Size = UDim2.new(0, 320, 0, 320)
-    frame.Position = UDim2.new(0.5, -160, 0, 10)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    frame.BackgroundTransparency = 0.2
+    frame.Size = UDim2.new(0, 300, 0, 370)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    frame.BackgroundTransparency = 0.1
     frame.BorderSizePixel = 0
     frame.Parent = screenGui
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = frame
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
     -- Header
     local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 36)
-    header.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+    header.Name = "Header"
+    header.Size = UDim2.new(1, 0, 0, 38)
+    header.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     header.BorderSizePixel = 0
     header.Parent = frame
-
-    local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 10)
-    headerCorner.Parent = header
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
 
     local headerFix = Instance.new("Frame")
     headerFix.Size = UDim2.new(1, 0, 0.5, 0)
     headerFix.Position = UDim2.new(0, 0, 0.5, 0)
-    headerFix.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+    headerFix.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     headerFix.BorderSizePixel = 0
     headerFix.Parent = header
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(0.7, 0, 1, 0)
+    title.Size = UDim2.new(0.65, 0, 1, 0)
+    title.Position = UDim2.new(0, 8, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "ðŸŽ¯ AUTO KATA"
+    title.Text = "AUTO KATA"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextScaled = true
     title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
 
-    -- Tombol pakai kata (tandai terpakai)
     local useBtn = Instance.new("TextButton")
     useBtn.Name = "UseBtn"
-    useBtn.Size = UDim2.new(0, 90, 0, 24)
-    useBtn.Position = UDim2.new(1, -95, 0.5, -12)
-    useBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    useBtn.Size = UDim2.new(0, 90, 0, 26)
+    useBtn.Position = UDim2.new(1, -96, 0.5, -13)
+    useBtn.BackgroundColor3 = Color3.fromRGB(40, 190, 40)
     useBtn.BorderSizePixel = 0
-    useBtn.Text = "âœ“ Pakai"
+    useBtn.Text = "Pakai #1"
     useBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     useBtn.TextScaled = true
     useBtn.Font = Enum.Font.GothamBold
     useBtn.Parent = header
+    Instance.new("UICorner", useBtn).CornerRadius = UDim.new(0, 6)
 
-    local useBtnCorner = Instance.new("UICorner")
-    useBtnCorner.CornerRadius = UDim.new(0, 6)
-    useBtnCorner.Parent = useBtn
-
-    -- Prompt label
+    -- Prompt
     local promptLabel = Instance.new("TextLabel")
     promptLabel.Name = "PromptLabel"
-    promptLabel.Size = UDim2.new(1, -20, 0, 30)
-    promptLabel.Position = UDim2.new(0, 10, 0, 42)
+    promptLabel.Size = UDim2.new(1, -16, 0, 28)
+    promptLabel.Position = UDim2.new(0, 8, 0, 44)
     promptLabel.BackgroundTransparency = 1
     promptLabel.Text = "Prompt: -"
-    promptLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    promptLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
     promptLabel.TextScaled = true
-    promptLabel.Font = Enum.Font.Gotham
+    promptLabel.Font = Enum.Font.GothamBold
     promptLabel.TextXAlignment = Enum.TextXAlignment.Left
     promptLabel.Parent = frame
 
-    -- Jawaban labels
+    -- Jawaban 1-10
     for i = 1, CONFIG.maxSuggestions do
-        local jawaban = Instance.new("TextLabel")
-        jawaban.Name = "Jawaban" .. i
-        jawaban.Size = UDim2.new(1, -20, 0, 22)
-        jawaban.Position = UDim2.new(0, 10, 0, 42 + 30 + (i-1) * 24)
-        jawaban.BackgroundTransparency = 1
-        jawaban.Text = ""
-        jawaban.TextColor3 = i == 1
-            and Color3.fromRGB(100, 255, 100)
+        local lbl = Instance.new("TextLabel")
+        lbl.Name = "Jawaban" .. i
+        lbl.Size = UDim2.new(1, -16, 0, 26)
+        lbl.Position = UDim2.new(0, 8, 0, 76 + (i-1) * 27)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = ""
+        lbl.TextColor3 = i == 1
+            and Color3.fromRGB(80, 255, 80)
             or Color3.fromRGB(180, 180, 180)
-        jawaban.TextScaled = true
-        jawaban.Font = i == 1 and Enum.Font.GothamBold or Enum.Font.Gotham
-        jawaban.TextXAlignment = Enum.TextXAlignment.Left
-        jawaban.Parent = frame
+        lbl.TextScaled = true
+        lbl.Font = i == 1 and Enum.Font.GothamBold or Enum.Font.Gotham
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = frame
     end
 
-    -- Status label
+    -- Status
     local status = Instance.new("TextLabel")
     status.Name = "Status"
-    status.Size = UDim2.new(1, -20, 0, 18)
-    status.Position = UDim2.new(0, 10, 1, -22)
+    status.Size = UDim2.new(1, -16, 0, 20)
+    status.Position = UDim2.new(0, 8, 1, -24)
     status.BackgroundTransparency = 1
-    status.Text = "â³ Memuat kata..."
-    status.TextColor3 = Color3.fromRGB(150, 150, 150)
+    status.Text = "Memuat kata..."
+    status.TextColor3 = Color3.fromRGB(130, 130, 130)
     status.TextScaled = true
     status.Font = Enum.Font.Gotham
     status.TextXAlignment = Enum.TextXAlignment.Left
@@ -131,97 +117,63 @@ local function createUI()
     return screenGui
 end
 
--- ================================================
--- LOAD WORD LIST
--- ================================================
-local wordList = {}
-
 local function loadWordList(ui)
-    local status = ui.MainFrame.Status
-    status.Text = "â³ Memuat 29K kata KBBI..."
-    local success, result = pcall(function()
+    ui.MainFrame.Status.Text = "Memuat 29K kata..."
+    local ok, result = pcall(function()
         return game:HttpGet(CONFIG.wordListURL)
     end)
-    if success and result then
-        local ok, data = pcall(function()
+    if ok and result then
+        local ok2, data = pcall(function()
             return game:GetService("HttpService"):JSONDecode(result)
         end)
-        if ok and data then
+        if ok2 and data then
             wordList = data
-            status.Text = "âœ… " .. #wordList .. " kata siap!"
+            ui.MainFrame.Status.Text = #wordList .. " kata siap!"
         else
-            status.Text = "âŒ Gagal parse JSON"
+            ui.MainFrame.Status.Text = "Gagal parse JSON"
         end
     else
-        status.Text = "âŒ Gagal load dari GitHub"
+        ui.MainFrame.Status.Text = "Gagal load GitHub"
     end
 end
 
--- ================================================
--- CARI KATA (skip yang udah dipakai)
--- ================================================
-local currentSuggestions = {}
-
 local function findWords(prompt, maxResults)
     if not prompt or prompt == "" then return {} end
-    local lowerPrompt = string.lower(prompt)
-    local len = #lowerPrompt
+    local lp = string.lower(prompt)
+    local len = #lp
     local results = {}
-
     local shuffled = {}
     for i, w in ipairs(wordList) do shuffled[i] = w end
     for i = #shuffled, 2, -1 do
         local j = math.random(i)
         shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
     end
-
     for _, word in ipairs(shuffled) do
-        if #word > len then
-            if string.lower(string.sub(word, 1, len)) == lowerPrompt then
-                -- Skip kata yang udah dipakai
-                if not usedWords[string.upper(word)] then
-                    table.insert(results, string.upper(word))
-                    if #results >= maxResults then break end
-                end
+        if #word > len and string.lower(string.sub(word, 1, len)) == lp then
+            if not usedWords[string.upper(word)] then
+                table.insert(results, string.upper(word))
+                if #results >= maxResults then break end
             end
         end
     end
     return results
 end
 
--- ================================================
--- UPDATE UI
--- ================================================
 local function updateUI(ui, prompt, words)
-    local frame = ui.MainFrame
-    frame.PromptLabel.Text = "Prompt: " .. (prompt or "-")
     currentSuggestions = words
+    ui.MainFrame.PromptLabel.Text = "Prompt: " .. (prompt or "-")
     for i = 1, CONFIG.maxSuggestions do
-        local label = frame:FindFirstChild("Jawaban" .. i)
-        if label then
-            if words[i] then
-                label.Text = (i == 1 and "âž¡ï¸ " or "   ") .. words[i]
-            else
-                label.Text = ""
-            end
+        local lbl = ui.MainFrame:FindFirstChild("Jawaban" .. i)
+        if lbl then
+            lbl.Text = words[i] and ((i == 1 and "> " or "  ") .. words[i]) or ""
         end
     end
 end
 
--- ================================================
--- FUNGSI GUI GAME
--- ================================================
-local function getMatchUI()
-    local pg = localPlayer:FindFirstChild("PlayerGui")
-    if not pg then return nil end
-    return pg:FindFirstChild("MatchUI")
-end
-
 local function getPrompt()
-    local matchUI = getMatchUI()
-    if not matchUI then return nil end
     local ok, result = pcall(function()
-        return matchUI
+        return localPlayer.PlayerGui
+            :FindFirstChild("MatchUI")
             :FindFirstChild("BottomUI")
             :FindFirstChild("TopUI")
             :FindFirstChild("WordServerFrame")
@@ -234,41 +186,34 @@ local function getPrompt()
 end
 
 local function isMyTurn()
-    local matchUI = getMatchUI()
-    if not matchUI then return false end
     local ok, result = pcall(function()
-        return matchUI:FindFirstChild("BottomUI"):FindFirstChild("Keyboard").Visible
+        return localPlayer.PlayerGui
+            :FindFirstChild("MatchUI")
+            :FindFirstChild("BottomUI")
+            :FindFirstChild("Keyboard").Visible
     end)
     return ok and result == true
 end
 
--- ================================================
 -- MAIN
--- ================================================
 local ui = createUI()
 loadWordList(ui)
 
--- Tombol "Pakai" â€” tandai kata pertama sebagai terpakai
+-- Tombol Pakai
 ui.MainFrame.Header.UseBtn.MouseButton1Click:Connect(function()
     if currentSuggestions[1] then
         local word = currentSuggestions[1]
         usedWords[word] = true
-        print("[AutoKata] Ditandai terpakai: " .. word)
-
-        -- Refresh saran dengan kata baru
         local prompt = getPrompt()
         if prompt then
             local newWords = findWords(prompt, CONFIG.maxSuggestions)
             updateUI(ui, prompt, newWords)
-            ui.MainFrame.Status.Text = "âœ… " .. word .. " ditandai terpakai"
+            ui.MainFrame.Status.Text = word .. " ditandai terpakai"
         end
     end
 end)
 
-print("[AutoKata] UI aktif! Tinggal tunggu giliran.")
-
 local lastPrompt = ""
-
 while true do
     task.wait(0.3)
     if isMyTurn() then
@@ -277,18 +222,13 @@ while true do
             lastPrompt = prompt
             local words = findWords(prompt, CONFIG.maxSuggestions)
             updateUI(ui, prompt, words)
-            if #words > 0 then
-                ui.MainFrame.Status.Text = "âœ… " .. #words .. " kata ditemukan!"
-                print("[AutoKata] Prompt: " .. prompt .. " â†’ " .. words[1])
-            else
-                ui.MainFrame.Status.Text = "âŒ Tidak ada kata untuk: " .. prompt
-            end
+            ui.MainFrame.Status.Text = #words .. " kata ditemukan"
         end
     else
         if lastPrompt ~= "" then
             lastPrompt = ""
             updateUI(ui, "-", {})
-            ui.MainFrame.Status.Text = "â³ Menunggu giliran..."
+            ui.MainFrame.Status.Text = "Menunggu giliran..."
         end
     end
 end
